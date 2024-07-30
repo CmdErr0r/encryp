@@ -1,9 +1,9 @@
-from PyQt5.QtWidgets import QApplication, QMainWindow, QLabel, QPushButton, QVBoxLayout,QHBoxLayout, QWidget,QFileDialog
+from PyQt5.QtWidgets import QApplication, QMainWindow, QLabel, QPushButton, QVBoxLayout,QHBoxLayout, QWidget,QFileDialog,QMenu,QAction
 from PyQt5.QtCore import Qt, QMimeData
 from PyQt5.QtGui import QDragEnterEvent, QDropEvent
 import sys
 import os
-from encrypte import Lock
+from data  import dataEncrypt, dataFind
 
 class Main(QMainWindow):
     def __init__(self):
@@ -11,89 +11,32 @@ class Main(QMainWindow):
         self.setWindowTitle("Loc")
         self.setGeometry(100,100,400,300)
         self.setAcceptDrops(True)
-        self.lock = Lock()
 
-        self.central_widget = QWidget()
-        self.setCentralWidget(self.central_widget)
-        self.layout = QVBoxLayout(self.central_widget)
+        # Create the menu bar
+        self.menu_bar = self.menuBar()
 
-        # self.keyBlockContainer = QWidget()
-        # self.keyBlockLayout = QHBoxLayout(self.keyBlockContainer)
-        self.messages = lambda a,stat:f"<div style='text-align: center;'><font color=\'{'green' if stat else 'red'}\'>{a}</font></div>"
-        self.keyAcc = QLabel("Key isnt activated")
-        self.layout.addWidget(self.keyAcc)
+        # Create the File menu
+        file_menu = self.menu_bar.addMenu("Encrypte Data")
+        file_menu = self.menu_bar.addMenu("Find Dublicated Data")
 
-        self.search = QPushButton("Add Key", self)
-        self.search.clicked.connect(self.onDialogKey)
-        self.layout.addWidget(self.search)
+        # Create actions for the File menu
+        dataEncrypt = QAction("encrypte Data", self)
+        dataEncrypt.triggered.connect(self.show_dataEncrypt)
+        file_menu.addAction(dataEncrypt)
 
-        # self.layout.addWidget(self.keyBlockLayout)
+        dataFind = QAction("encrypte Data", self)
+        dataFind.triggered.connect(self.show_dataFind)
+        file_menu.addAction(dataFind)
+        # dataFind = QAction("Find Dublicated Files", self)
+        # dataFind.triggered.connect(self.show_crypt_section)
 
-        # self.label.setAlignment(Qt.AlignCenter) 
-        # self.layout.addWidget(self.label)
+    def show_dataEncrypt(self):
+        self.crypt_window = dataEncrypt()
+        self.crypt_window.show()
 
-        self.btn_encrypt = QPushButton("Lock File", self)
-        self.btn_encrypt.clicked.connect(self.on_lock)
-        self.layout.addWidget(self.btn_encrypt)
-
-        self.Kreset = QPushButton("Reset Key", self)
-        self.Kreset.clicked.connect(self.on_KReset)
-
-    def updateLL(self):
-        self.btn_encrypt.setText("Unlock File" if self.lock.key else "Lock File")
-        if self.lock.key:
-            self.layout.addWidget(self.Kreset)
-        else:
-            self.layout.removeWidget(self.Kreset)
-        self.keyAcc.setText(f"<div style='text-align: center;'>{'Key Avaiable' if self.lock.key else 'No Key Found'}</div>")
-
-    def on_KReset(self, e):
-        self.lock.key=None
-        self.updateLL()
-
-    def on_lock(self, e):
-        options = QFileDialog.Options()
-        options |= QFileDialog.ReadOnly
-
-        filePath, _ = QFileDialog.getOpenFileName(self, "Select a file", "", "All Files (*)", options=options)
-        if filePath:
-            msg = list(open(filePath).read())
-            self.lock.msg = msg
-
-            # unlock and write to a file
-            if(self.lock.key):
-                if self.lock.lockKey(unlock=True):
-                    """ Decryption of File and updating the File """
-                    open(filePath, 'w').write("".join(self.lock.msg))
-                    self.keyAcc.setText(self.messages("file has decrypted succsessfully", True))
-                else:
-                    self.keyAcc.setText(self.messages("key didnt match", False))
-            else:
-                """ Encryption of File and updating the File with a key """
-                key = self.lock.generateKey()
-                self.lock.reKey()
-                self.lock.lockKey()
-
-                open(os.path.join(os.path.dirname(filePath), os.path.splitext(os.path.basename(filePath))[0] +".key"), 'w').write("".join(["".join(i) for i in self.lock.key ]))
-                open(filePath, 'w').write("".join(self.lock.msg))
-                self.keyAcc.setText(self.messages("encrypted the file", True))
-            
-            self.updateLL()
-
-    def onDialogKey(self):
-        options = QFileDialog.Options()
-        options |= QFileDialog.ReadOnly
-
-        filePath, _ = QFileDialog.getOpenFileName(self, "Select a file", "", "All Files (*)", options=options)
-        if filePath:            
-            
-            # activate Key
-            key = open(filePath).read()
-            self.lock.key = key
-            trutly = self.lock.reKey()
-
-            self.keyAcc.setText(self.messages(f"{'Succsessfully Activated' if trutly else 'No Key Found'}", trutly))
-            self.updateLL()
+    def show_dataFind(self):
+        self.crypt_window = dataFind()
+        self.crypt_window.show()
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)

@@ -1,25 +1,22 @@
 
 """
- __   __   ___    _   _    ___              ___     ___    _____    ___      _
- \ \ / /  / _ \  | | | |  | _ \            |   \   /   \  |_   _|  /   \    | |
-  \ V /  | (_) | | |_| |  |   /            | |) |  | - |    | |    | - |    |_|
-  _|_|_   \___/   \___/   |_|_\            |___/   |_|_|   _|_|_   |_|_|   _(_)_
-
-    ____                _             _ 
-  / ____|              | |           | |  
- | |     _ __ __ _  __ | | __ ___  __| |
- | |    | '__/ _` |/ _`| |/ // _ \/ _  |
- | |____| | | (_| | (_ |   <   __/ (_) |
-  \_____|_|  \__,_|\__,|_|\_\\___|\____|
-
+   _____                  __     __                _____        _        
+  / ____|                 \ \   / /               |  __ \      | |       
+ | (___   __ ___   _____   \ \_/ /__  _   _ _ __  | |  | | __ _| |_ __ _ 
+  \___ \ / _` \ \ / / _ \   \   / _ \| | | | '__| | |  | |/ _` | __/ _` |
+  ____) | (_| |\ V /  __/    | | (_) | |_| | |    | |__| | (_| | || (_| |
+ |_____/ \__,_| \_/ \___|    |_|\___/ \__,_|_|    |_____/ \__,_|\__\__,_|
+                                                                         
+                                                                         
 Ci_nk     MIX                 push k times to right in spesific range
 ci_nk     MIX                 push k times to left in spesific range
 Ri_n      MIX                 sort from back in spesific range
 Ki_nt     ADD                 dublicate t times each word in spesific range
-Pi_k      DEPRECATED          add i_ for all mod k
+Pi_k      ADD  TODO           add i_ for all mod k
 Dt_k      ADD  TODO           dublicate t times for all mod k
 Ai_k      MIX  TODO           tooks range from oposite and sort back
-Si_n      DEPRECATED          swap with oposite in spesific range
+Si_n      MIX  TODO           swap with oposite in spesific range
+Q         MIX  TODO           sort from back
 
 """
 
@@ -60,7 +57,7 @@ class Encrypte:
         for i in range(n):
             m = t[i]
             for _ in range(k-1):
-                if m != t.pop(i): print("BROKE");return False
+                if m != t.pop(i): print("BROKE"); return False
 
         self.msg = self.msg[:index] + t + self.msg[n*k+index:]
         return True
