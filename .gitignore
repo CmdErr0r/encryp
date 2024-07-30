@@ -1,6 +1,6 @@
 venv
+.venv
 dist
 build
 __pycache__
-main
-w
+.env

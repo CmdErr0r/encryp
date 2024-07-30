@@ -1,9 +1,6 @@
-from PyQt5.QtWidgets import QApplication, QMainWindow, QLabel, QPushButton, QVBoxLayout,QHBoxLayout, QWidget,QFileDialog,QMenu,QAction
-from PyQt5.QtCore import Qt, QMimeData
-from PyQt5.QtGui import QDragEnterEvent, QDropEvent
+from PyQt5.QtWidgets import QApplication, QMainWindow,QLabel, QStackedWidget, QVBoxLayout, QWidget ,QAction
 import sys
-import os
-from data  import dataEncrypt, dataFind
+from file import dataEncrypt, dataFind
 
 class Main(QMainWindow):
     def __init__(self):
@@ -12,32 +9,41 @@ class Main(QMainWindow):
         self.setGeometry(100,100,400,300)
         self.setAcceptDrops(True)
 
-        # Create the menu bar
+        self.central_widget = QWidget()
+        self.setCentralWidget(self.central_widget)
+        self.layout = QVBoxLayout(self.central_widget)
+        
+        self.stack = QStackedWidget()
+        self.layout.addWidget(self.stack)
+        
+        # Add the initial welcome label to the stack
+        self.welcome_label = QLabel("Welcome! Select an action from the menu.")
+        self.stack.addWidget(self.welcome_label)
+        
+        self.encrypt_widget = dataEncrypt()
+        self.stack.addWidget(self.encrypt_widget)
+
+        self.find_widget = dataFind()
+        self.stack.addWidget(self.find_widget)
+        self.show_data_find()
+
         self.menu_bar = self.menuBar()
+        menu_data = self.menu_bar.addMenu("Data")
+        
+        data_encrypt = QAction("Encrypt Data", self)
+        data_encrypt.triggered.connect(self.show_data_encrypt)
+        menu_data.addAction(data_encrypt)
+        
+        data_find = QAction("Find Duplicated Data", self)
+        data_find.triggered.connect(self.show_data_find)
+        menu_data.addAction(data_find)
 
-        # Create the File menu
-        file_menu = self.menu_bar.addMenu("Encrypte Data")
-        file_menu = self.menu_bar.addMenu("Find Dublicated Data")
-
-        # Create actions for the File menu
-        dataEncrypt = QAction("encrypte Data", self)
-        dataEncrypt.triggered.connect(self.show_dataEncrypt)
-        file_menu.addAction(dataEncrypt)
-
-        dataFind = QAction("encrypte Data", self)
-        dataFind.triggered.connect(self.show_dataFind)
-        file_menu.addAction(dataFind)
-        # dataFind = QAction("Find Dublicated Files", self)
-        # dataFind.triggered.connect(self.show_crypt_section)
-
-    def show_dataEncrypt(self):
-        self.crypt_window = dataEncrypt()
-        self.crypt_window.show()
-
-    def show_dataFind(self):
-        self.crypt_window = dataFind()
-        self.crypt_window.show()
-
+    def show_data_encrypt(self):
+        self.stack.setCurrentWidget(self.encrypt_widget)
+    
+    def show_data_find(self):
+        self.stack.setCurrentWidget(self.find_widget)
+        
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     window = Main()

@@ -1,92 +1,170 @@
-from PyQt5.QtWidgets import QApplication, QMainWindow, QLabel, QPushButton, QVBoxLayout,QHBoxLayout, QWidget,QFileDialog,QMenu,QAction
-from PyQt5.QtCore import Qt, QMimeData
-from PyQt5.QtGui import QDragEnterEvent, QDropEvent
-import sys
-import os
-from encrypte import Lock
 
-class dataEncrypt(QMainWindow):
+"""
+   _____                  __     __                _____        _        
+  / ____|                 \ \   / /               |  __ \      | |       
+ | (___   __ ___   _____   \ \_/ /__  _   _ _ __  | |  | | __ _| |_ __ _ 
+  \___ \ / _` \ \ / / _ \   \   / _ \| | | | '__| | |  | |/ _` | __/ _` |
+  ____) | (_| |\ V /  __/    | | (_) | |_| | |    | |__| | (_| | || (_| |
+ |_____/ \__,_| \_/ \___|    |_|\___/ \__,_|_|    |_____/ \__,_|\__\__,_|
+                                                                         
+                                                                         
+Ci_nk     MIX                 push k times to right in spesific range
+ci_nk     MIX                 push k times to left in spesific range
+Ri_n      MIX                 sort from back in spesific range
+Ki_nt     ADD                 dublicate t times each word in spesific range
+Pi_k      ADD  TODO           add i_ for all mod k
+Dt_k      ADD  TODO           dublicate t times for all mod k
+Ai_k      MIX  TODO           tooks range from oposite and sort back
+Si_n      MIX  TODO           swap with oposite in spesific range
+Q         MIX  TODO           sort from back
+
+"""
+
+import random
+import re
+
+class Encrypte:
     def __init__(self):
         super().__init__()
-        self.lock = Lock()
-        self.central_widget = QWidget()
-        self.setCentralWidget(self.central_widget)
-        self.layout = QVBoxLayout(self.central_widget)
+    
+    def change(self, index, n, k, left=True):
+        t = self.msg[index: n+index]
+        for i in range(k): t.insert(len(t)*int(left), t.pop(int(left)-1))
+        self.msg = self.msg[:index] + t + self.msg[n+index:]
 
-        self.messages = lambda a,stat:f"<div style='text-align: center;'><font color=\'{'green' if stat else 'red'}\'>{a}</font></div>"
-        self.keyAcc = QLabel("")
-        self.layout.addWidget(self.keyAcc)
+    def redo_change(self, index, n, k, left=True):
+        self.change(index, n, k, not left)
 
-        self.search = QPushButton("", self)
-        self.search.clicked.connect(self.onDialogKey)
-        self.layout.addWidget(self.search)
-
-        self.btn_encrypt = QPushButton("No Key Found", self)
-        self.btn_encrypt.clicked.connect(self.on_lock)
-        self.layout.addWidget(self.btn_encrypt)
-
-        self.updateLL()
-
-    def updateLL(self):
-        self.btn_encrypt.setText("Unlock File" if self.lock.key else "Lock File")
-        self.search.setText("Remove Key" if self.lock.key else "Add Key" )
-
-    def on_lock(self, e):
-        options = QFileDialog.Options()
-        options |= QFileDialog.ReadOnly
-
-        filePath, _ = QFileDialog.getOpenFileName(self, "Select a file", "", "All Files (*)", options=options)
-        if filePath:
-            msg = list(open(filePath).read())
-            self.lock.msg = msg
-
-            # unlock and write to a file
-            if(self.lock.key):
-                if self.lock.lockKey(unlock=True):
-                    """ Decryption of File and updating the File """
-                    open(filePath, 'w').write("".join(self.lock.msg))
-                    self.keyAcc.setText(self.messages("File has Decrypted succsessfully", True))
-                else:
-                    self.keyAcc.setText(self.messages("key didnt match", False))
-            else:
-                """ Encryption of File and updating the File with a key """
-                key = self.lock.generateKey()
-                self.lock.reKey()
-                self.lock.lockKey()
-
-                open(os.path.join(os.path.dirname(filePath), os.path.basename(filePath) + ".key"), 'a').write("".join(["".join(i) for i in self.lock.key ]))
-                open(filePath, 'w').write("".join(self.lock.msg))
-                self.keyAcc.setText(self.messages("encrypted the file", True))
-            
-            self.updateLL()
-
-    def onDialogKey(self):
-        if(self.lock.key):
-            self.lock.key=None
-            self.updateLL()
-            self.keyAcc.setText(f"<div style='text-align: center;'>{'Key Avaiable' if self.lock.key else 'No Key Found'}</div>")
-
-            return
-
-        options = QFileDialog.Options()
-        options |= QFileDialog.ReadOnly
-
-        filePath, _ = QFileDialog.getOpenFileName(self, "Select a file", "", "All Files (*)", options=options)
-        if filePath:            
-            key = open(filePath).read()
-            self.lock.key = key
-            trutly = self.lock.reKey()
-            if not trutly: self.lock.key = None 
-            print("BROKEN AND REMOVED KEY")
-
-            self.keyAcc.setText(self.messages(f"{'Succsessfully Activated' if trutly else 'No Key Found'}", trutly))
-            self.updateLL()
-
-class dataFind(QMainWindow):
-    def __init__(self):
-        super().__init__()
-        self.lock = Lock()
-        self.central_widget = QWidget()
-        self.setCentralWidget(self.central_widget)
-        self.layout = QVBoxLayout(self.central_widget)
+    def reverse(self, index, n):
+        t = self.msg[index: index+n]
+        i0,i1 = index,index+n-1
+        for i in range(len(t)):
+            t.insert(len(t)-i-1,t.pop(0))
+        self.msg = self.msg[:index] + t + self.msg[n+index:]
         
+    # HAVE ADDITION 
+    def addEach(self, index, n, k):
+        t = self.msg[index: n+index]
+        for i in range(0,len(t)*k,k):
+            for ii in range(k-1):
+                t.insert(i+1, t[i])
+
+        self.msg = self.msg[:index] + t + self.msg[n+index:]
+        return True
+
+    def redo_addEach(self, index, n, k):
+        t = self.msg[index: n*k+index]
+        for i in range(n):
+            m = t[i]
+            for _ in range(k-1):
+                if m != t.pop(i): print("BROKE"); return False
+
+        self.msg = self.msg[:index] + t + self.msg[n*k+index:]
+        return True
+    
+    # HAVE ADDITION Archived
+    def addMod(self, index, k):
+        if 2>k: print("BROKE"); return False
+
+        t = self.msg[index]
+        for i in range(0, len(self.msg)+(len(self.msg)//(k-1)), k):
+            self.msg.insert(i, "ttt")
+    
+    def redo_addMod(self, index, k):
+        pass
+
+    def ordinary(self, unlock=False):
+        self.key = [ord(i) for i in self.key]
+            
+
+class Lock(Encrypte):
+    def __init__(self):
+        self.key=None
+        self.msg=None
+
+    # check key is true and "update the key" return false if key broken
+    def reKey(self):
+        key = list(self.key)+list("z0")
+        self.key = [[key.pop(0)]]
+
+        while match:=re.search('[a-zA-Z]', "".join(key)):
+            for _ in range(match.start()): self.key[-1].append(key.pop(0))
+
+            ottr = "".join(self.key[-1][1:])
+            regx = '^[0-9][0-9]+$' if self.key[-1][0] in ["R","P","D","S"] else '^[0-9][0-9][0-9]+$' if ["K","C","c"] else f"{random.random()}"
+            if not re.search(regx, ottr): return False
+
+            self.key.append([key.pop(0)])
+        self.key.pop()
+        return True
+            
+    # create key and crypted_msg from msg and "save the key" return key
+    def generateKey(self):
+        self.msg = list(self.msg)
+        regedits = ["^C.+[0-9][0-9]$","^c.+[0-9][0-9]$","^K.+[0-9][0-9]$","^R.+[0-9]$"]
+        regs = ["C","c","K","R"]
+
+        self.key = "".join([ regs[p:=random.randint(0, len(regedits)-1)] + str(random.randint(0, len(self.msg))) + str(random.randint(1,9)) + str(random.randint(1,9)) + str(random.randint(1,9))*(p==3)  for i in range(random.randint(len(self.msg) // 2, len(self.msg)))])
+        
+        return self.key
+    
+    # crack msg with key from crypted_msg and "save the msg" return false if key did'nt matches
+    def lockKey(self, unlock=False):
+        self.msg = list(self.msg)
+
+        for key in [self.key,  [self.key[len(self.key)-k-1] for k in range(len(self.key))]][int(unlock)]:
+            if key[0] in ["C", "c"]:
+                i_= int("".join(key[1:-2]))
+                n = int(key[-2])
+                k = int(key[-1])
+                left = key[0] == "c"
+                
+                # if i_ + n  > len(self.msg):return False
+                [self.change, self.redo_change][int(unlock)](i_, n, k, left)
+
+            elif key[0] == "R":
+                i_= int("".join(key[1:-1]))
+                n = int(key[-1])
+                self.reverse(i_, n)
+
+            elif key[0] == "K":
+                i_= int("".join(key[1:-2]))
+                n = int(key[-2])
+                k = int(key[-1])
+                if not [self.addEach, self.redo_addEach][int(unlock)](i_, n, k):return False
+
+            # elif key[0] == "P":
+            #     i_= int("".join(key[1:-1]))
+            #     k = int(key[-1])
+            #     if not [self.addMod, self.redo_addMod][int(unlock)](i_, k):return False
+        return True
+
+
+
+class Find:
+    def __init__(self):
+        self.files=None
+
+    def same(self): 
+        kk = sorted([(str(random.random()), file, str(len(file))) for file in self.files], key=lambda a:a[2])
+        k={}
+        while kk:
+            id, ms, le = kk.pop(0)
+            k[le] = k.get(le) or []
+            k[le].append((id,ms))
+
+        def find(k):
+            for i in k.keys():
+                t = k[i]
+                while t:
+                    id,ms = t.pop()
+                    print()
+                    print(t)
+                    if tt:=[t.pop(it) for it in range(len(t)) if len(t) > it and t[it][1]==ms]:
+                        print(tt)
+                        yield tt+[(id,ms)]
+        for i in find(k):
+            print(i)
+f=Find()
+f.files = [open(f"./t{i}.txt").read() for i in range(1,8)]
+f.same()
