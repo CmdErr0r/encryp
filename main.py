@@ -1,6 +1,6 @@
 from PyQt5.QtWidgets import QApplication, QMainWindow,QLabel, QStackedWidget, QVBoxLayout, QWidget ,QAction
 import sys
-from file import dataEncrypt, dataFind
+from file import dataEncrypt, dataFind, dataInfo
 
 class Main(QMainWindow):
     def __init__(self):
@@ -16,16 +16,14 @@ class Main(QMainWindow):
         self.stack = QStackedWidget()
         self.layout.addWidget(self.stack)
         
-        # Add the initial welcome label to the stack
-        self.welcome_label = QLabel("Welcome! Select an action from the menu.")
-        self.stack.addWidget(self.welcome_label)
-        
         self.encrypt_widget = dataEncrypt()
         self.stack.addWidget(self.encrypt_widget)
 
         self.find_widget = dataFind()
         self.stack.addWidget(self.find_widget)
-        self.show_data_find()
+
+        self.info_widget = dataInfo()
+        self.stack.addWidget(self.info_widget)
 
         self.menu_bar = self.menuBar()
         menu_data = self.menu_bar.addMenu("Data")
@@ -38,11 +36,19 @@ class Main(QMainWindow):
         data_find.triggered.connect(self.show_data_find)
         menu_data.addAction(data_find)
 
+        data_info = QAction("Get File Information", self)
+        data_info.triggered.connect(self.show_data_info)
+        menu_data.addAction(data_info)
+
+        self.show_data_info()
     def show_data_encrypt(self):
         self.stack.setCurrentWidget(self.encrypt_widget)
     
     def show_data_find(self):
         self.stack.setCurrentWidget(self.find_widget)
+
+    def show_data_info(self):
+        self.stack.setCurrentWidget(self.info_widget)
         
 if __name__ == "__main__":
     app = QApplication(sys.argv)

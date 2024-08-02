@@ -55,7 +55,7 @@ class Encrypte:
     def redo_addEach(self, index, n, k):
         t = self.msg[index: n*k+index]
         for i in range(n):
-            m = t[i]
+            m = t[i] # TODO BROKEN list index out of range
             for _ in range(k-1):
                 if m != t.pop(i): print("BROKE"); return False
 
@@ -141,30 +141,25 @@ class Lock(Encrypte):
 
 
 
-class Find:
-    def __init__(self):
-        self.files=None
+def find(paths):
+    files = {str(random.random()).split(".")[1]:path for path in paths}
+    files_undo = {files[id]:id for id in files.keys()}
+    context = [(id,open(files[id]).read()) for id in files.keys()]
 
-    def same(self): 
-        kk = sorted([(str(random.random()), file, str(len(file))) for file in self.files], key=lambda a:a[2])
-        k={}
-        while kk:
-            id, ms, le = kk.pop(0)
-            k[le] = k.get(le) or []
-            k[le].append((id,ms))
+    k = {}
+    while context:
+        id, msg = context.pop(0)
+        k[msg] = k.get(msg) or []
+        k[msg].append(id)
 
-        def find(k):
-            for i in k.keys():
-                t = k[i]
-                while t:
-                    id,ms = t.pop()
-                    print()
-                    print(t)
-                    if tt:=[t.pop(it) for it in range(len(t)) if len(t) > it and t[it][1]==ms]:
-                        print(tt)
-                        yield tt+[(id,ms)]
-        for i in find(k):
-            print(i)
-f=Find()
-f.files = [open(f"./t{i}.txt").read() for i in range(1,8)]
-f.same()
+
+    return [[files[ii] for ii in k[id]] for id in k ]
+
+def getInfo(paths):
+    from os import path
+    import time
+    for file in paths:
+        absolute_path, file_size = [path(file) for path in [path.abspath, path.getsize]]
+        last_access_time,last_modification_time,creation_time = [time.ctime(path(file)) for path in [path.getatime,path.getmtime,path.getctime]]
+        yield [absolute_path, file_size, last_access_time, last_modification_time, creation_time]
+
